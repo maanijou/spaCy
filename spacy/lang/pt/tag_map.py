@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ...symbols import POS, PUNCT, SYM, ADJ, NUM, DET, ADV, ADP, X, VERB, CCONJ
-from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, SCONJ, AUX, CONJ
+from ...symbols import NOUN, PROPN, PART, INTJ, SPACE, PRON, SCONJ, AUX
 
 
 TAG_MAP = {
@@ -5039,5 +5039,19 @@ TAG_MAP = {
     "punc": {POS: PUNCT},
     "v-pcp|M|P": {POS: VERB},
     "v-pcp|M|S": {POS: VERB},
-    "_SP": {POS: SPACE}
+    "ADJ": {POS: ADJ},
+    "AUX": {POS: AUX},
+    "CCONJ": {POS: CCONJ},
+    "DET": {POS: DET},
+    "INTJ": {POS: INTJ},
+    "NUM": {POS: NUM},
+    "PART": {POS: PART},
+    "PRON": {POS: PRON},
+    "PUNCT": {POS: PUNCT},
+    "SCONJ": {POS: SCONJ},
+    "SYM": {POS: SYM},
+    "VERB": {POS: VERB},
+    "X": {POS: X},
+    "adv": {POS: ADV},
+    "_SP": {POS: SPACE},
 }

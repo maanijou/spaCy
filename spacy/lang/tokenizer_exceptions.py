@@ -1,22 +1,22 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-# The use of this module turns out to be important, to avoid pathological
-# back-tracking. See Issue #957
-import regex as re
+import re
 
-from ..symbols import ORTH, POS, LEMMA, SPACE, PUNCT
+from .char_classes import ALPHA_LOWER
+from ..symbols import ORTH, POS, TAG, LEMMA, SPACE
 
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
-# A few minor mods to this regex to account for use cases represented in test_urls
+# and https://gist.github.com/dperini/729294 (Diego Perini, MIT License)
+# A few mods to this regex to account for use cases represented in test_urls
 URL_PATTERN = (
+    # fmt: off
     r"^"
-    # in order to support the prefix tokenization (see prefix test cases in test_urls).
-    r"(?=[\w])"
-    # protocol identifier
-    r"(?:(?:https?|ftp|mailto)://)?"
-    # user:pass authentication
+    # protocol identifier (mods: make optional and expand schemes)
+    # (see: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml)
+    r"(?:(?:[\w\+\-\.]{2,})://)?"
+    # mailto:user or user:pass authentication
     r"(?:\S+(?::\S*)?@)?"
     r"(?:"
     # IP address exclusion
@@ -35,50 +35,88 @@ URL_PATTERN = (
     r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}"
     r"(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))"
     r"|"
-    # host name
-    r"(?:(?:[a-z0-9\-]*)?[a-z0-9]+)"
-    # domain name
-    r"(?:\.(?:[a-z0-9\-])*[a-z0-9]+)*"
+    # host & domain names
+    # mods: match is case-sensitive, so include [A-Z]
+      "(?:"
+        "(?:"
+          "[A-Za-z0-9\u00a1-\uffff]"
+          "[A-Za-z0-9\u00a1-\uffff_-]{0,62}"
+        ")?"
+        "[A-Za-z0-9\u00a1-\uffff]\."
+      ")+"
     # TLD identifier
-    r"(?:\.(?:[a-z]{2,}))"
+    # mods: use ALPHA_LOWER instead of a wider range so that this doesn't match
+    # strings like "lower.Upper", which can be split on "." by infixes in some
+    # languages
+    r"(?:[" + ALPHA_LOWER + "]{2,63})"
     r")"
     # port number
     r"(?::\d{2,5})?"
     # resource path
-    r"(?:/\S*)?"
-    # query parameters
-    r"\??(:?\S*)?"
-    # in order to support the suffix tokenization (see suffix test cases in test_urls),
-    r"(?<=[\w/])"
+    r"(?:[/?#]\S*)?"
     r"$"
+    # fmt: on
 ).strip()
 
 TOKEN_MATCH = re.compile(URL_PATTERN, re.UNICODE).match
-
 
 
 BASE_EXCEPTIONS = {}
 
 
 for exc_data in [
-    {ORTH: " ", POS: SPACE},
-    {ORTH: "\t", POS: SPACE},
-    {ORTH: "\\t", POS: SPACE},
-    {ORTH: "\n", POS: SPACE},
-    {ORTH: "\\n", POS: SPACE},
-    {ORTH: "\u2014", POS: PUNCT, LEMMA: "--"},
-    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  "}]:
+    {ORTH: " ", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\t", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\\t", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\n", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\\n", POS: SPACE, TAG: "_SP"},
+    {ORTH: "\u2014"},
+    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  ", TAG: "_SP"},
+]:
     BASE_EXCEPTIONS[exc_data[ORTH]] = [exc_data]
 
 
 for orth in [
-    "'", "\\\")", "<space>", "''", "C++", "a.", "b.", "c.", "d.", "e.", "f.",
-    "g.", "h.", "i.", "j.", "k.", "l.", "m.", "n.", "o.", "p.", "q.", "r.",
-    "s.", "t.", "u.", "v.", "w.", "x.", "y.", "z.", "ä.", "ö.", "ü."]:
+    "'",
+    '\\")',
+    "<space>",
+    "''",
+    "C++",
+    "a.",
+    "b.",
+    "c.",
+    "d.",
+    "e.",
+    "f.",
+    "g.",
+    "h.",
+    "i.",
+    "j.",
+    "k.",
+    "l.",
+    "m.",
+    "n.",
+    "o.",
+    "p.",
+    "q.",
+    "r.",
+    "s.",
+    "t.",
+    "u.",
+    "v.",
+    "w.",
+    "x.",
+    "y.",
+    "z.",
+    "ä.",
+    "ö.",
+    "ü.",
+]:
     BASE_EXCEPTIONS[orth] = [{ORTH: orth}]
 
 
-emoticons = set("""
+emoticons = set(
+    r"""
 :)
 :-)
 :))
@@ -206,7 +244,8 @@ o.0
 ¯\(ツ)/¯
 (╯°□°）╯︵┻━┻
 ><(((*>
-""".split())
+""".split()
+)
 
 
 for orth in emoticons:

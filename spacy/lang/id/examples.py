@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 """
 Example sentences to test spaCy and its language models.
 
->>> from spacy.lang.en.examples import sentences
+>>> from spacy.lang.id.examples import sentences
 >>> docs = nlp.pipe(sentences)
 """
 
@@ -18,5 +18,5 @@ sentences = [
     "Jakarta adalah kota besar yang nyaris tidak pernah tidur."
     "Kamu ada di mana semalam?",
     "Siapa yang membeli makanan ringan tersebut?",
-    "Siapa presiden pertama Republik Indonesia?"
+    "Siapa presiden pertama Republik Indonesia?",
 ]

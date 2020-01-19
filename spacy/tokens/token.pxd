@@ -34,6 +34,11 @@ cdef class Token:
             return Lexeme.c_check_flag(token.lex, feat_name)
         elif feat_name == LEMMA:
             return token.lemma
+        elif feat_name == NORM:
+            if token.norm == 0:
+                return token.lex.norm
+            else:
+                return token.norm
         elif feat_name == POS:
             return token.pos
         elif feat_name == TAG:
@@ -48,6 +53,10 @@ cdef class Token:
             return token.ent_iob
         elif feat_name == ENT_TYPE:
             return token.ent_type
+        elif feat_name == ENT_ID:
+            return token.ent_id
+        elif feat_name == ENT_KB_ID:
+            return token.ent_kb_id
         elif feat_name == SENT_START:
             return token.sent_start
         else:
@@ -58,6 +67,8 @@ cdef class Token:
                                        attr_t value) nogil:
         if feat_name == LEMMA:
             token.lemma = value
+        elif feat_name == NORM:
+            token.norm = value
         elif feat_name == POS:
             token.pos = <univ_pos_t>value
         elif feat_name == TAG:
@@ -72,5 +83,9 @@ cdef class Token:
             token.ent_iob = value
         elif feat_name == ENT_TYPE:
             token.ent_type = value
+        elif feat_name == ENT_ID:
+            token.ent_id = value
+        elif feat_name == ENT_KB_ID:
+            token.ent_kb_id = value
         elif feat_name == SENT_START:
             token.sent_start = value

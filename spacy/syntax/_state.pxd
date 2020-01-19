@@ -7,7 +7,7 @@ from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from murmurhash.mrmr cimport hash64
 
 from ..vocab cimport EMPTY_LEXEME
-from ..structs cimport TokenC, Entity
+from ..structs cimport TokenC, SpanC
 from ..lexeme cimport Lexeme
 from ..symbols cimport punct
 from ..attrs cimport IS_SPACE
@@ -40,7 +40,7 @@ cdef cppclass StateC:
     int* _buffer
     bint* shifted
     TokenC* _sent
-    Entity* _ents
+    SpanC* _ents
     TokenC _empty_token
     RingBufferC _hist
     int length
@@ -56,7 +56,7 @@ cdef cppclass StateC:
         this._stack = <int*>calloc(length + (PADDING * 2), sizeof(int))
         this.shifted = <bint*>calloc(length + (PADDING * 2), sizeof(bint))
         this._sent = <TokenC*>calloc(length + (PADDING * 2), sizeof(TokenC))
-        this._ents = <Entity*>calloc(length + (PADDING * 2), sizeof(Entity))
+        this._ents = <SpanC*>calloc(length + (PADDING * 2), sizeof(SpanC))
         if not (this._buffer and this._stack and this.shifted
                 and this._sent and this._ents):
             with gil:
@@ -100,15 +100,35 @@ cdef cppclass StateC:
         free(this.shifted - PADDING)
 
     void set_context_tokens(int* ids, int n) nogil:
-        if n == 2:
+        if n == 1:
+            if this.B(0) >= 0:
+                ids[0] = this.B(0)
+            else:
+                ids[0] = -1
+        elif n == 2:
             ids[0] = this.B(0)
             ids[1] = this.S(0)
-        if n == 8:
+        elif n == 3:
+            if this.B(0) >= 0:
+                ids[0] = this.B(0)
+            else:
+                ids[0] = -1
+            # First word of entity, if any
+            if this.entity_is_open():
+                ids[1] = this.E(0)
+            else:
+                ids[1] = -1
+            # Last word of entity, if within entity
+            if ids[0] == -1 or ids[1] == -1:
+                ids[2] = -1
+            else:
+                ids[2] = ids[0] - 1
+        elif n == 8:
             ids[0] = this.B(0)
             ids[1] = this.B(1)
             ids[2] = this.S(0)
             ids[3] = this.S(1)
-            ids[4] = this.H(this.S(0))
+            ids[4] = this.S(2)
             ids[5] = this.L(this.B(0), 1)
             ids[6] = this.L(this.S(0), 1)
             ids[7] = this.R(this.S(0), 1)
@@ -314,14 +334,20 @@ cdef cppclass StateC:
             this._stack[this._s_i] = this.B(0)
         this._s_i += 1
         this._b_i += 1
-        if this.B_(0).sent_start == 1:
-            this.set_break(this.B(0))
+        if this.safe_get(this.B_(0).l_edge).sent_start == 1:
+            this.set_break(this.B_(0).l_edge)
         if this._b_i > this._break:
             this._break = -1
 
     void pop() nogil:
         if this._s_i >= 1:
             this._s_i -= 1
+
+    void force_final() nogil:
+        # This should only be used in desperate situations, as it may leave
+        # the analysis in an unexpected state.
+        this._s_i = 0
+        this._b_i = this.length
 
     void unshift() nogil:
         this._b_i -= 1
@@ -400,7 +426,7 @@ cdef cppclass StateC:
         memcpy(this._sent, src._sent, this.length * sizeof(TokenC))
         memcpy(this._stack, src._stack, this.length * sizeof(int))
         memcpy(this._buffer, src._buffer, this.length * sizeof(int))
-        memcpy(this._ents, src._ents, this.length * sizeof(Entity))
+        memcpy(this._ents, src._ents, this.length * sizeof(SpanC))
         memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
         this._b_i = src._b_i
         this._s_i = src._s_i

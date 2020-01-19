@@ -1,6 +1,5 @@
 from cymem.cymem cimport Pool
 cimport numpy as np
-from preshed.counter cimport PreshCounter
 
 from ..vocab cimport Vocab
 from ..structs cimport TokenC, LexemeC
@@ -17,6 +16,12 @@ ctypedef const TokenC* const_TokenC_ptr
 ctypedef fused LexemeOrToken:
     const_Lexeme_ptr
     const_TokenC_ptr
+
+
+cdef int set_children_from_heads(TokenC* tokens, int length) except -1
+
+
+cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) except -1
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2

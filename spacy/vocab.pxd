@@ -29,6 +29,7 @@ cdef class Vocab:
     cpdef readonly StringStore strings
     cpdef public Morphology morphology
     cpdef public object vectors
+    cpdef public object lookups
     cdef readonly int length
     cdef public object data_dir
     cdef public object lex_attr_getters
@@ -42,5 +43,4 @@ cdef class Vocab:
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL
 
-    cdef PreshMap _by_hash
     cdef PreshMap _by_orth

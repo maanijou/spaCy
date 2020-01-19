@@ -3,11 +3,18 @@ spacy/data/
 corpora/
 /models/
 keys/
+*.json.gz
 
 # Website
+website/.cache/
+website/public/
+website/node_modules
+website/.npm
+website/logs
+*.log
+npm-debug.log*
 website/www/
 website/_deploy.sh
-website/.gitignore
 
 # Cython / C extensions
 cythonize.json
@@ -36,6 +43,7 @@ venv/
 .dev
 .denv
 .pypyenv
+.pytest_cache/
 
 # Distribution / packaging
 env/
@@ -49,6 +57,8 @@ parts/
 sdist/
 var/
 *.egg-info/
+pip-wheel-metadata/
+Pipfile.lock
 .installed.cfg
 *.egg
 .eggs
