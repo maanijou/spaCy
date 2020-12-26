@@ -59,7 +59,7 @@ def test_issue2626_2835(en_tokenizer, text):
 
 
 def test_issue2656(en_tokenizer):
-    """Test that tokenizer correctly splits of punctuation after numbers with
+    """Test that tokenizer correctly splits off punctuation after numbers with
     decimal points.
     """
     doc = en_tokenizer("I went for 40.3, and got home by 10.0.")
@@ -124,7 +124,7 @@ def test_issue2772(en_vocab):
     words = "When we write or communicate virtually , we can hide our true feelings .".split()
     # A tree with a non-projective (i.e. crossing) arc
     # The arcs (0, 4) and (2, 9) cross.
-    heads = [4, 1, 7, -1, -2, -1, 3, 2, 1, 0, -1, -2, -1]
+    heads = [4, 1, 7, -1, -2, -1, 3, 2, 1, 0, 2, 1, -3, -4]
     deps = ["dep"] * len(heads)
     doc = get_doc(en_vocab, words=words, heads=heads, deps=deps)
     assert doc[1].is_sent_start is None

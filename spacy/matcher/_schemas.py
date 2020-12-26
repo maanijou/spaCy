@@ -170,6 +170,14 @@ TOKEN_PATTERN_SCHEMA = {
                 "title": "Token is the first in a sentence",
                 "$ref": "#/definitions/boolean_value",
             },
+            "SENT_START": {
+                "title": "Token is the first in a sentence",
+                "$ref": "#/definitions/boolean_value",
+            },
+            "SPACY": {
+                "title": "Token has a trailing space",
+                "$ref": "#/definitions/boolean_value",
+            },
             "LIKE_NUM": {
                 "title": "Token resembles a number",
                 "$ref": "#/definitions/boolean_value",

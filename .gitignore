@@ -5,6 +5,11 @@ corpora/
 keys/
 *.json.gz
 
+# Tests
+spacy/tests/package/setup.cfg
+spacy/tests/package/pyproject.toml
+spacy/tests/package/requirements.txt
+
 # Website
 website/.cache/
 website/public/
@@ -13,8 +18,7 @@ website/.npm
 website/logs
 *.log
 npm-debug.log*
-website/www/
-website/_deploy.sh
+quickstart-training-generator.js
 
 # Cython / C extensions
 cythonize.json
@@ -40,6 +44,7 @@ __pycache__/
 .~env/
 .venv
 venv/
+env3.*/
 .dev
 .denv
 .pypyenv
@@ -56,6 +61,7 @@ lib64/
 parts/
 sdist/
 var/
+wheelhouse/
 *.egg-info/
 pip-wheel-metadata/
 Pipfile.lock
@@ -63,6 +69,7 @@ Pipfile.lock
 *.egg
 .eggs
 MANIFEST
+spacy/git_info.py
 
 # Temporary files
 *.~*

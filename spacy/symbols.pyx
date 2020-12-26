@@ -17,7 +17,7 @@ IDS = {
     "LIKE_NUM": LIKE_NUM,
     "LIKE_EMAIL": LIKE_EMAIL,
     "IS_STOP": IS_STOP,
-    "IS_OOV": IS_OOV,
+    "IS_OOV_DEPRECATED": IS_OOV_DEPRECATED,
     "IS_BRACKET": IS_BRACKET,
     "IS_QUOTE": IS_QUOTE,
     "IS_LEFT_PUNCT": IS_LEFT_PUNCT,
@@ -93,6 +93,7 @@ IDS = {
     "SPACY": SPACY,
     "PROB": PROB,
     "LANG": LANG,
+    "IDX": IDX,
 
     "ADJ": ADJ,
     "ADP": ADP,
