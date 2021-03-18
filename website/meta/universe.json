@@ -1,6 +1,34 @@
 {
     "resources": [
         {
+            "id": "spacy-dbpedia-spotlight",
+            "title": "DBpedia Spotlight for SpaCy",
+            "slogan": "Use DBpedia Spotlight to link entities inside SpaCy",
+            "description": "This library links SpaCy with [DBpedia Spotlight](https://www.dbpedia-spotlight.org/). You can easily get the DBpedia entities from your documents, using the public web service or by using your own instance of DBpedia Spotlight. The `doc.ents` are populated with the entities and all their details (URI, type, ...).",
+            "github": "MartinoMensio/spacy-dbpedia-spotlight",
+            "pip": "spacy-dbpedia-spotlight",
+            "code_example": [
+                "import spacy_dbpedia_spotlight",
+                "# load your model as usual",
+                "nlp = spacy.load('en_core_web_lg')",
+                "# add the pipeline stage",
+                "nlp.add_pipe('dbpedia_spotlight')",
+                "# get the document",
+                "doc = nlp('The president of USA is calling Boris Johnson to decide what to do about coronavirus')",
+                "# see the entities",
+                "print('Entities', [(ent.text, ent.label_, ent.kb_id_) for ent in doc.ents])",
+                "# inspect the raw data from DBpedia spotlight",
+                "print(doc.ents[0]._.dbpedia_raw_result)"
+            ],
+            "category": ["models", "pipeline"],
+            "author": "Martino Mensio",
+            "author_links": {
+                "twitter": "MartinoMensio",
+                "github": "MartinoMensio",
+                "website": "https://martinomensio.github.io"
+            }
+        },
+        {
             "id": "spacy-textblob",
             "title": "spaCyTextBlob",
             "slogan": "Easy sentiment analysis for spaCy using TextBlob",
@@ -8,28 +36,39 @@
             "github": "SamEdwardes/spaCyTextBlob",
             "pip": "spacytextblob",
             "code_example": [
-            "import spacy",
-            "from spacytextblob.spacytextblob import SpacyTextBlob",
-            "",
-            "nlp = spacy.load('en_core_web_sm')",
-            "spacy_text_blob = SpacyTextBlob()",
-            "nlp.add_pipe(spacy_text_blob)",
-            "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
-            "doc = nlp(text)",
-            "doc._.sentiment.polarity      # Polarity: -0.125",
-            "doc._.sentiment.subjectivity  # Sujectivity: 0.9",
-            "doc._.sentiment.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
+                "import spacy",
+                "from spacytextblob.spacytextblob import SpacyTextBlob",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "spacy_text_blob = SpacyTextBlob()",
+                "nlp.add_pipe(spacy_text_blob)",
+                "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
+                "doc = nlp(text)",
+                "doc._.sentiment.polarity      # Polarity: -0.125",
+                "doc._.sentiment.subjectivity  # Sujectivity: 0.9",
+                "doc._.sentiment.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
             ],
             "code_language": "python",
             "url": "https://spacytextblob.netlify.app/",
             "author": "Sam Edwardes",
             "author_links": {
-            "twitter": "TheReaLSamlam",
-            "github": "SamEdwardes",
-            "website": "https://samedwardes.com"
+                "twitter": "TheReaLSamlam",
+                "github": "SamEdwardes",
+                "website": "https://samedwardes.com"
             },
             "category": ["pipeline"],
             "tags": ["sentiment", "textblob"]
+        },
+        {
+            "id": "spacy-ray",
+            "title": "spacy-ray",
+            "slogan": "Parallel and distributed training with spaCy and Ray",
+            "description": "[Ray](https://ray.io/) is a fast and simple framework for building and running **distributed applications**. This very lightweight extension package lets you use Ray for parallel and distributed training with spaCy. If `spacy-ray` is installed in the same environment as spaCy, it will automatically add `spacy ray` commands to your spaCy CLI.",
+            "github": "explosion/spacy-ray",
+            "pip": "spacy-ray",
+            "category": ["training"],
+            "author": "Explosion / Anyscale",
+            "thumb": "https://i.imgur.com/7so6ZpS.png"
         },
         {
             "id": "spacy-sentence-bert",
@@ -501,15 +540,16 @@
                 "from spacy_lookup import Entity",
                 "",
                 "nlp = spacy.load('en')",
-                "entity = Entity(keywords_list=['python', 'java platform'])",
+                "entity = Entity(keywords_list=['python', 'product manager', 'java platform'])",
                 "nlp.add_pipe(entity, last=True)",
                 "",
                 "doc = nlp(\"I am a product manager for a java and python.\")",
                 "assert doc._.has_entities == True",
-                "assert doc[2:5]._.has_entities == True",
                 "assert doc[0]._.is_entity == False",
+                "assert doc[3]._.entity_desc == 'product manager'",
                 "assert doc[3]._.is_entity == True",
-                "print(doc._.entities)"
+                "",
+                "print([(token.text, token._.canonical) for token in doc if token._.is_entity])"
             ],
             "author": "Marc Puig",
             "author_links": {
@@ -2100,10 +2140,8 @@
             "code_example": [
                 "import spacy",
                 "",
-                "nlp = spacy.load(\"en_trf_bertbaseuncased_lg\")",
-                "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")",
-                "print(doc[0].similarity(doc[7]))",
-                "print(doc._.trf_last_hidden_state.shape)"
+                "nlp = spacy.load(\"en_core_web_trf\")",
+                "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")"
             ],
             "author": "Explosion",
             "author_links": {
@@ -2129,7 +2167,7 @@
                 "from negspacy.negation import Negex",
                 "",
                 "nlp = spacy.load(\"en_core_web_sm\")",
-                "negex = Negex(nlp, ent_types=[\"PERSON\",\"ORG\"])",
+                "negex = Negex(nlp, ent_types=[\"PERSON','ORG\"])",
                 "nlp.add_pipe(negex, last=True)",
                 "",
                 "doc = nlp(\"She does not like Steve Jobs but likes Apple products.\")",
@@ -2504,14 +2542,14 @@
             "id": "contextualSpellCheck",
             "title": "Contextual Spell Check",
             "slogan": "Contextual spell correction using BERT (bidirectional representations)",
-            "description": "This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting NWE. In the coming days, I would like to focus on RWE and optimising the package by implementing it in cython.",
+            "description": "This package currently focuses on Out of Vocabulary (OOV) word or non-word error (NWE) correction using BERT model. The idea of using BERT was to use the context when correcting NWE.",
             "github": "R1j1t/contextualSpellCheck",
             "pip": "contextualSpellCheck",
             "code_example": [
                 "import spacy",
                 "import contextualSpellCheck",
                 "",
-                "nlp = spacy.load('en')",
+                "nlp = spacy.load('en_core_web_sm')",
                 "contextualSpellCheck.add_to_pipe(nlp)",
                 "doc = nlp('Income was $9.4 milion compared to the prior year of $2.7 milion.')",
                 "",
@@ -2564,14 +2602,14 @@
             "description": "A spaCy rule-based pipeline for identifying positive cases of COVID-19 from clinical text. A version of this system was deployed as part of the US Department of Veterans Affairs biosurveillance response to COVID-19.",
             "pip": "cov-bsv",
             "code_example": [
-              "import cov_bsv",
-              "",
-              "nlp = cov_bsv.load()",
-              "doc = nlp('Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected')",
-              "",
-              "print(doc.ents)",
-              "print(doc._.cov_classification)",
-              "cov_bsv.visualize_doc(doc)"
+                "import cov_bsv",
+                "",
+                "nlp = cov_bsv.load()",
+                "doc = nlp('Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected')",
+                "",
+                "print(doc.ents)",
+                "print(doc._.cov_classification)",
+                "cov_bsv.visualize_doc(doc)"
             ],
             "category": ["pipeline", "standalone", "biomedical", "scientific"],
             "tags": ["clinical", "epidemiology", "covid-19", "surveillance"],
@@ -2589,18 +2627,18 @@
             "description": "A toolkit for clinical NLP with spaCy. Features include sentence splitting, section detection, and asserting negation, family history, and uncertainty.",
             "pip": "medspacy",
             "code_example": [
-              "import medspacy",
-              "from medspacy.ner import TargetRule",
-              "",
-              "nlp = medspacy.load()",
-              "print(nlp.pipe_names)",
-              "",
-              "nlp.get_pipe('target_matcher').add([TargetRule('stroke', 'CONDITION'), TargetRule('diabetes', 'CONDITION'), TargetRule('pna', 'CONDITION')])",
-              "doc = nlp('Patient has hx of stroke. Mother diagnosed with diabetes. No evidence of pna.')",
-              "",
-              "for ent in doc.ents:",
-              "    print(ent, ent._.is_negated, ent._.is_family, ent._.is_historical)",
-              "medspacy.visualization.visualize_ent(doc)"
+                "import medspacy",
+                "from medspacy.ner import TargetRule",
+                "",
+                "nlp = medspacy.load()",
+                "print(nlp.pipe_names)",
+                "",
+                "nlp.get_pipe('target_matcher').add([TargetRule('stroke', 'CONDITION'), TargetRule('diabetes', 'CONDITION'), TargetRule('pna', 'CONDITION')])",
+                "doc = nlp('Patient has hx of stroke. Mother diagnosed with diabetes. No evidence of pna.')",
+                "",
+                "for ent in doc.ents:",
+                "    print(ent, ent._.is_negated, ent._.is_family, ent._.is_historical)",
+                "medspacy.visualization.visualize_ent(doc)"
             ],
             "category": ["biomedical", "scientific", "research"],
             "tags": ["clinical"],
@@ -2609,14 +2647,14 @@
                 "github": "medspacy"
             }
         },
-          {
+        {
             "id": "rita-dsl",
             "title": "RITA DSL",
             "slogan": "Domain Specific Language for creating language rules",
             "github": "zaibacu/rita-dsl",
             "description": "A Domain Specific Language (DSL) for building language patterns. These can be later compiled into spaCy patterns, pure regex, or any other format",
             "pip": "rita-dsl",
-              "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
+            "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
             "code_language": "python",
             "code_example": [
                 "import spacy",
@@ -2670,6 +2708,87 @@
             },
             "category": ["scientific", "research", "standalone"],
             "tags": ["Evolutionary Computation", "Grammatical Evolution"]
+        },
+        {
+            "id": "SpacyDotNet",
+            "title": "spaCy .NET Wrapper",
+            "slogan": "SpacyDotNet is a .NET Core compatible wrapper for spaCy, based on Python.NET",
+            "description": "This projects relies on [Python.NET](http://pythonnet.github.io/) to interop with spaCy. It's not meant to be a complete and exhaustive implementation of all spaCy features and [APIs](https://spacy.io/api). Although it should be enough for basic tasks, it's considered as a starting point if you need to build a complex project using spaCy in .NET Most of the basic features in _Spacy101_ are available. All `Container` classes are present (`Doc`, `Token`, `Span` and `Lexeme`) with their basic properties/methods running and also `Vocab` and `StringStore` in a limited form. Anyway, any developer should be ready to add the missing properties or classes in a very straightforward manner.",
+            "github": "AMArostegui/SpacyDotNet",
+            "thumb": "https://raw.githubusercontent.com/AMArostegui/SpacyDotNet/master/cslogo.png",
+            "code_example": [
+                "var spacy = new Spacy();",
+                "",
+                "var nlp = spacy.Load(\"en_core_web_sm\");",
+                "var doc = nlp.GetDocument(\"Apple is looking at buying U.K. startup for $1 billion\");",
+                "",
+                "foreach (Token token in doc.Tokens)",
+                "    Console.WriteLine($\"{token.Text} {token.Lemma} {token.PoS} {token.Tag} {token.Dep} {token.Shape} {token.IsAlpha} {token.IsStop}\");",
+                "",
+                "Console.WriteLine(\"\");",
+                "foreach (Span ent in doc.Ents)",
+                "    Console.WriteLine($\"{ent.Text} {ent.StartChar} {ent.EndChar} {ent.Label}\");",
+                "",
+                "nlp = spacy.Load(\"en_core_web_md\");",
+                "var tokens = nlp.GetDocument(\"dog cat banana afskfsd\");",
+                "",
+                "Console.WriteLine(\"\");",
+                "foreach (Token token in tokens.Tokens)",
+                "    Console.WriteLine($\"{token.Text} {token.HasVector} {token.VectorNorm}, {token.IsOov}\");",
+                "",
+                "tokens = nlp.GetDocument(\"dog cat banana\");",
+                "Console.WriteLine(\"\");",
+                "foreach (Token token1 in tokens.Tokens)",
+                "{",
+                "    foreach (Token token2 in tokens.Tokens)",
+                "        Console.WriteLine($\"{token1.Text} {token2.Text} {token1.Similarity(token2) }\");",
+                "}",
+                "",
+                "doc = nlp.GetDocument(\"I love coffee\");",
+                "Console.WriteLine(\"\");",
+                "Console.WriteLine(doc.Vocab.Strings[\"coffee\"]);",
+                "Console.WriteLine(doc.Vocab.Strings[3197928453018144401]);",
+                "",
+                "Console.WriteLine(\"\");",
+                "foreach (Token word in doc.Tokens)",
+                "{",
+                "    var lexeme = doc.Vocab[word.Text];",
+                "    Console.WriteLine($@\"{lexeme.Text} {lexeme.Orth} {lexeme.Shape} {lexeme.Prefix} {lexeme.Suffix} {lexeme.IsAlpha} {lexeme.IsDigit} {lexeme.IsTitle} {lexeme.Lang}\");",
+                "}"
+            ],
+            "code_language": "csharp",
+            "author": "Antonio Miras",
+            "author_links": {
+                "github": "AMArostegui"
+            },
+            "category": ["nonpython"]
+        },
+        {
+            "id": "ruts",
+            "title": "ruTS",
+            "slogan": "A library for statistics extraction from texts in Russian",
+            "description": "The library allows extracting the following statistics from a text: basic statistics, readability metrics, lexical diversity metrics, morphological statistics",
+            "github": "SergeyShk/ruTS",
+            "pip": "ruts",
+            "code_example": [
+                "import spacy",
+                "import ruts",
+                "",
+                "nlp = spacy.load('ru_core_news_sm')",
+                "nlp.add_pipe('basic', last=True)",
+                "doc = nlp('мама мыла раму')",
+                "doc._.basic.get_stats()"
+            ],
+            "code_language": "python",
+            "thumb": "https://habrastorage.org/webt/6z/le/fz/6zlefzjavzoqw_wymz7v3pwgfp4.png",
+            "image": "https://clipartart.com/images/free-tree-roots-clipart-black-and-white-2.png",
+            "author": "Sergey Shkarin",
+            "author_links": {
+                "twitter": "shk_sergey",
+                "github": "SergeyShk"
+            },
+            "category": ["pipeline", "standalone"],
+            "tags": ["Text Analytics", "Russian"]
         }
     ],
 
