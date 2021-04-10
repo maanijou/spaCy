@@ -55,15 +55,15 @@ For a detailed compatibility overview, see the
 This is also the source of spaCy's internal compatibility check, performed when
 you run the [`download`](/api/cli#download) command.
 
-## Pretrained pipeline design {#design}
+## Trained pipeline design {#design}
 
-The spaCy v3 pretrained pipelines are designed to be efficient and configurable.
+The spaCy v3 trained pipelines are designed to be efficient and configurable.
 For example, multiple components can share a common "token-to-vector" model and
 it's easy to swap out or disable the lemmatizer. The pipelines are designed to
 be efficient in terms of speed and size and work well when the pipeline is run
 in full.
 
-When modifying a pretrained pipeline, it's important to understand how the
+When modifying a trained pipeline, it's important to understand how the
 components **depend on** each other. Unlike spaCy v2, where the `tagger`,
 `parser` and `ner` components were all independent, some v3 components depend on
 earlier components in the pipeline. As a result, disabling or reordering
@@ -82,7 +82,9 @@ Main changes from spaCy v2 models:
 - The lemmatizer tables and processing move from the vocab and tagger to a
   separate `lemmatizer` component.
 
-### CNN/CPU pipeline design
+### CNN/CPU pipeline design {#design-cnn}
+
+![Components and their dependencies in the CNN pipelines](../images/pipeline-design.svg)
 
 In the `sm`/`md`/`lg` models:
 
@@ -99,20 +101,18 @@ In the `sm`/`md`/`lg` models:
   `tagger`+`attribute_ruler` or `morphologizer`.
 - The `ner` component is independent with its own internal tok2vec layer.
 
-<!-- TODO: pretty diagram -->
+### Transformer pipeline design {#design-trf}
 
-### Transformer pipeline design
-
-In the tranformer (`trf`) models, the `tagger`, `parser` and `ner` (if present)
+In the transformer (`trf`) models, the `tagger`, `parser` and `ner` (if present)
 all listen to the `transformer` component. The `attribute_ruler` and
 `lemmatizer` have the same configuration as in the CNN models.
 
 <!-- TODO: pretty diagram -->
 
-### Modifying the default pipeline
+### Modifying the default pipeline {#design-modify}
 
 For faster processing, you may only want to run a subset of the components in a
-pretrained pipeline. The `disable` and `exclude` arguments to
+trained pipeline. The `disable` and `exclude` arguments to
 [`spacy.load`](/api/top-level#spacy.load) let you control which components are
 loaded and run. Disabled components are loaded in the background so it's
 possible to reenable them in the same pipeline in the future with
