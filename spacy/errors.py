@@ -159,6 +159,8 @@ class Warnings:
             "http://spacy.io/usage/v3#jupyter-notebook-gpu")
     W112 = ("The model specified to use for initial vectors ({name}) has no "
             "vectors. This is almost certainly a mistake.")
+    W113 = ("Sourced component '{name}' may not work as expected: source "
+            "vectors are not identical to current pipeline vectors.")
 
 
 @add_codes
@@ -636,7 +638,7 @@ class Errors:
             "method, make sure it's overwritten on the subclass.")
     E940 = ("Found NaN values in scores.")
     E941 = ("Can't find model '{name}'. It looks like you're trying to load a "
-            "model from a shortcut, which is deprecated as of spaCy v3.0. To "
+            "model from a shortcut, which is obsolete as of spaCy v3.0. To "
             "load the model, use its full name instead:\n\n"
             "nlp = spacy.load(\"{full}\")\n\nFor more details on the available "
             "models, see the models directory: https://spacy.io/models. If you "
@@ -651,8 +653,8 @@ class Errors:
             "returned the initialized nlp object instead?")
     E944 = ("Can't copy pipeline component '{name}' from source '{model}': "
             "not found in pipeline. Available components: {opts}")
-    E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
-            "nlp object, but got: {source}")
+    E945 = ("Can't copy pipeline component '{name}' from source. Expected "
+            "loaded nlp object, but got: {source}")
     E947 = ("`Matcher.add` received invalid `greedy` argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("`Matcher.add` received invalid 'patterns' argument: expected "

@@ -78,7 +78,7 @@ took place before the date you sign these terms.
     * each contribution shall be in compliance with U.S. export control laws and
     other applicable export and import laws. You agree to notify us if you
     become aware of any circumstance which would make any of the foregoing
-    representations inaccurate in any respect. We may publicly disclose your
+    representations inaccurate in any respect. We may publicly disclose your 
     participation in the project, including the fact that you have signed the SCA.
 
 6. This SCA is governed by the laws of the State of California and applicable
@@ -96,11 +96,12 @@ mark both statements:
 
 ## Contributor Details
 
-| Field                          | Entry                |
-|------------------------------- | -------------------- |
-| Name                           |  Shantam Raj         |
-| Company name (if applicable)   |                      |
-| Title or role (if applicable)  |                      |
-| Date                           |   10/4/2021          |
-| GitHub username                |     armsp            |
-| Website (optional)             |https://shantamraj.com|
+| Field                          | Entry                    |
+|------------------------------- | ------------------------ |
+| Name                           | Meghana Bhange            |
+| Company name (if applicable)   | Verloop.io                 |
+| Title or role (if applicable)  | ML Engineer        |
+| Date                           | 2020-04-21               |
+| GitHub username                | meghanbhange                  |
+| Website (optional)             | https://meghana.blog |
+
