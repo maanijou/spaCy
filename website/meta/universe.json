@@ -1,12 +1,38 @@
 {
     "resources": [
         {
+            "id": "nlpcloud",
+            "title": "NLPCloud.io",
+            "slogan": "Production-ready API for spaCy models in production",
+            "description": "A highly-available hosted API to easily deploy and use spaCy models in production. Supports NER, POS tagging, dependency parsing, and tokenization.",
+            "github": "nlpcloud",
+            "pip": "nlpcloud",
+            "code_example": [
+                "import nlpcloud",
+                "",
+                "client = nlpcloud.Client('en_core_web_lg', '4eC39HqLyjWDarjtT1zdp7dc')",
+                "client.entities('John Doe is a Go Developer at Google')",
+                "# [{'end': 8, 'start': 0, 'text': 'John Doe', 'type': 'PERSON'}, {'end': 25, 'start': 13, 'text': 'Go Developer', 'type': 'POSITION'}, {'end': 35,'start': 30, 'text': 'Google', 'type': 'ORG'}]"
+            ],
+            "thumb":"https://avatars.githubusercontent.com/u/77671902",
+            "image":"https://nlpcloud.io/assets/images/logo.svg",
+            "code_language": "python",
+            "author": "NLPCloud.io",
+            "author_links": {
+            "github": "nlpcloud",
+            "twitter": "cloud_nlp",
+            "website": "https://nlpcloud.io"   
+            },
+            "category": ["apis", "nonpython", "standalone"],
+            "tags": ["api", "deploy", "production"]
+        },
+        {
             "id": "denomme",
             "title": "denomme : Multilingual Name Detector",
             "slogan": "Multilingual Name Detection",
             "description": "A SpaCy extension for Spans to extract multilingual names out of documents trained on XLM-roberta backbone",
             "github": "meghanabhange/denomme",
-            "pip": "denomme",
+            "pip": "denomme https://denomme.s3.us-east-2.amazonaws.com/xx_denomme-0.3.1/dist/xx_denomme-0.3.1.tar.gz",
             "code_example": [
                 "from spacy.lang.xx import MultiLanguage",
                 "from denomme.name import person_name_component",
@@ -16,6 +42,8 @@
                 "print(doc._.person_name)",
                 "# ['Meghana S.R Bhange', 'Asha']"
             ],
+            "thumb":"https://i.ibb.co/jwGVWPZ/rainbow-bohemian-logo-removebg-preview.png",
+            "code_language": "python",
             "author": "Meghana Bhange",
             "author_links": {
             "github": "meghanabhange",
@@ -24,12 +52,38 @@
             "category": ["standalone"],
             "tags": ["person-name-detection"]
         },
+	{
+            "id": "eMFDscore",
+            "title": "eMFDscore : Extended Moral Foundation Dictionary Scoring for Python",
+            "slogan": "Extended Moral Foundation Dictionary Scoring for Python",
+            "description": "eMFDscore is a library for the fast and flexible extraction of various moral information metrics from textual input data. eMFDscore is built on spaCy for faster execution and performs minimal preprocessing consisting of tokenization, syntactic dependency parsing, lower-casing, and stopword/punctuation/whitespace removal. eMFDscore lets users score documents with multiple Moral Foundations Dictionaries, provides various metrics for analyzing moral information, and extracts moral patient, agent, and attribute words related to entities.",
+            "github": "https://github.com/medianeuroscience/emfdscore",
+            "code_example": [
+                "from emfdscore.scoring import score_docs",
+                "import pandas as pd",
+                "template_input = pd.read_csv('emfdscore/template_input.csv', header=None)",
+                "DICT_TYPE = 'emfd'",
+                "PROB_MAP = 'single'",
+                "SCORE_METHOD = 'bow'",
+		"OUT_METRICS = 'vice-virtue'",
+		"OUT_CSV_PATH = 'single-vv.csv'",
+		"df = score_docs(template_input,DICT_TYPE,PROB_MAP,SCORE_METHOD,OUT_METRICS,num_docs)",
+            ],
+            "code_language": "python",
+            "author": "Media Neuroscience Lab",
+            "author_links": {
+            "github": "medianeuroscience",
+            "twitter": "medianeuro"
+            },
+            "category": ["research", "teaching"],
+            "tags": ["morality", "dictionary", "sentiment"]
+        },
 	      {
             "id": "skweak",
             "title": "skweak",
             "slogan": "Weak supervision for NLP",
             "description": "`skweak` brings the power of weak supervision to NLP tasks, and in particular sequence labelling and text classification. Instead of annotating documents by hand, `skweak` allows you to define *labelling functions* to automatically label your documents, and then aggregate their results using a statistical model that estimates the accuracy and confusions of each labelling function.",
-            "github": "https://github.com/NorskRegnesentral/skweak",
+            "github": "NorskRegnesentral/skweak",
             "pip": "skweak",
             "code_example": [
                 "import spacy, re",
@@ -2373,8 +2427,7 @@
                 "from negspacy.negation import Negex",
                 "",
                 "nlp = spacy.load(\"en_core_web_sm\")",
-                "negex = Negex(nlp, ent_types=[\"PERSON','ORG\"])",
-                "nlp.add_pipe(negex, last=True)",
+                "nlp.add_pipe(\"negex\", config={\"ent_types\":[\"PERSON\",\"ORG\"]})",
                 "",
                 "doc = nlp(\"She does not like Steve Jobs but likes Apple products.\")",
                 "for e in doc.ents:",
@@ -3030,6 +3083,55 @@
             },
             "category": ["research", "standalone", "scientific"],
             "tags": ["Text Analytics", "Coherence", "Cohesion"]
+        },
+        {
+            "id": "hmrb",
+            "title": "Hammurabi",
+            "slogan": "Python Rule Processing Engine 🏺",
+            "description": "Hammurabi works as a rule engine to parse input using a defined set of rules. It uses a simple and readable syntax to define complex rules to handle phrase matching. The syntax supports nested logical statements, regular expressions, reusable or side-loaded variables and match triggered callback functions to modularize your rules. The latest version works with both spaCy 2.X and 3.X. For more information check the documentation on [ReadTheDocs](https://hmrb.readthedocs.io/en/latest/).",
+            "github": "babylonhealth/hmrb",
+            "pip": "hmrb",
+            "code_example": [
+                "import spacy # __version__ 3.0+",
+                "from hmrb.core import SpacyCore",
+                "",
+                "grammar = \"\"\"",
+                "Var is_hurting:",
+                "(",
+                "    optional (lemma: \"be\")",
+                "    (lemma: \"hurt\")",
+                ")",
+                "Law:",
+                "    - package: \"headache\"",
+                "    - callback: \"mark_headache\"",
+                "(",
+                "    (lemma: \"head\", pos: \"NOUN\")",
+                "    $is_hurting",
+                ")\"\"\"",
+                "",
+                "conf = {",
+                "   \"rules\": grammar",
+                "   \"callbacks\": {",
+                "        \"mark_headache\": \"callbacks.headache_handler\",",
+                "    },",
+                "   \"map_doc\": \"augmenters.jsonify_span\",",
+                "   \"sort_length\": True,",
+                "}",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "nlp.add_pipe(\"hammurabi\", config=conf)",
+                "nlp(sentences)"
+            ],
+            "code_language": "python",
+            "thumb": "https://user-images.githubusercontent.com/6807878/118643685-cae6b880-b7d4-11eb-976e-066aec9505da.png",
+            "image": "https://user-images.githubusercontent.com/6807878/118643685-cae6b880-b7d4-11eb-976e-066aec9505da.png",
+            "author": "Kristian Boda",
+            "author_links": {
+                "github": "bodak",
+                "twitter": "bodak",
+                "website": "https://github.com/babylonhealth/"
+            },
+            "category": ["pipeline", "standalone", "scientific", "biomedical"],
+            "tags": ["babylonhealth", "rule-engine", "matcher"]
         }
     ],
 
