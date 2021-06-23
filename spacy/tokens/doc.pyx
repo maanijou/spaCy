@@ -275,6 +275,8 @@ cdef class Doc:
             deps = [dep if dep is not None else MISSING_DEP_ for dep in deps]
         if deps and not heads:
             heads = [0] * len(deps)
+        if heads and not deps:
+            raise ValueError(Errors.E1017)
         if sent_starts is not None:
             for i in range(len(sent_starts)):
                 if sent_starts[i] is True:
@@ -1319,7 +1321,7 @@ cdef class Doc:
             if "user_data_values" not in exclude:
                 serializers["user_data_values"] = lambda: srsly.msgpack_dumps(user_data_values)
         if "user_hooks" not in exclude and any((self.user_hooks, self.user_token_hooks, self.user_span_hooks)):
-            util.logger.warning(Warnings.W109)
+            warnings.warn(Warnings.W109)
         return util.to_dict(serializers, exclude)
 
     def from_dict(self, msg, *, exclude=tuple()):

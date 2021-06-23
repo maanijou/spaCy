@@ -648,6 +648,19 @@ def get_model_version_range(spacy_version: str) -> str:
     return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
 
 
+def get_model_lower_version(constraint: str) -> Optional[str]:
+    """From a version range like >=1.2.3,<1.3.0 return the lower pin.
+    """
+    try:
+        specset = SpecifierSet(constraint)
+        for spec in specset:
+            if spec.operator in (">=", "==", "~="):
+                return spec.version
+    except Exception:
+        pass
+    return None
+
+
 def get_base_version(version: str) -> str:
     """Generate the base version without any prerelease identifiers.
 
@@ -701,10 +714,18 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
             raise ValueError(Errors.E054.format(setting=setting))
     if "spacy_version" in meta:
         if not is_compatible_version(about.__version__, meta["spacy_version"]):
+            lower_version = get_model_lower_version(meta["spacy_version"])
+            lower_version = get_minor_version(lower_version)
+            if lower_version is not None:
+                lower_version = "v" + lower_version
+            elif "spacy_git_version" in meta:
+                lower_version = "git commit " + meta["spacy_git_version"]
+            else:
+                lower_version = "version unknown"
             warn_msg = Warnings.W095.format(
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
-                version=meta["spacy_version"],
+                version=lower_version,
                 current=about.__version__,
             )
             warnings.warn(warn_msg)
@@ -1370,32 +1391,14 @@ def combine_score_weights(
         should be preserved.
     RETURNS (Dict[str, float]): The combined and normalized weights.
     """
+    # We divide each weight by the total weight sum.
     # We first need to extract all None/null values for score weights that
     # shouldn't be shown in the table *or* be weighted
-    result = {}
-    all_weights = []
-    for w_dict in weights:
-        filtered_weights = {}
-        for key, value in w_dict.items():
-            value = overrides.get(key, value)
-            if value is None:
-                result[key] = None
-            else:
-                filtered_weights[key] = value
-        all_weights.append(filtered_weights)
-    for w_dict in all_weights:
-        # We need to account for weights that don't sum to 1.0 and normalize
-        # the score weights accordingly, then divide score by the number of
-        # components.
-        total = sum(w_dict.values())
-        for key, value in w_dict.items():
-            if total == 0:
-                weight = 0.0
-            else:
-                weight = round(value / total / len(all_weights), 2)
-            prev_weight = result.get(key, 0.0)
-            prev_weight = 0.0 if prev_weight is None else prev_weight
-            result[key] = prev_weight + weight
+    result = {key: overrides.get(key, value) for w_dict in weights for (key, value) in w_dict.items()}
+    weight_sum = sum([v if v else 0.0 for v in result.values()])
+    for key, value in result.items():
+        if value and weight_sum > 0:
+            result[key] = round(value / weight_sum, 2)
     return result
 
 
