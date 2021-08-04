@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
 from pydantic.main import ModelMetaclass
-from thinc.api import Optimizer, ConfigValidationError
+from thinc.api import Optimizer, ConfigValidationError, Model
 from thinc.config import Promise
 from collections import defaultdict
 import inspect
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from .language import Language  # noqa: F401
     from .training import Example  # noqa: F401
+    from .vocab import Vocab  # noqa: F401
 
 
 # fmt: off
@@ -158,6 +159,7 @@ class TokenPatternString(BaseModel):
     NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
     IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
+    INTERSECTS: Optional[List[StrictStr]] = Field(None, alias="intersects")
 
     class Config:
         extra = "forbid"
@@ -174,8 +176,9 @@ class TokenPatternNumber(BaseModel):
     REGEX: Optional[StrictStr] = Field(None, alias="regex")
     IN: Optional[List[StrictInt]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictInt]] = Field(None, alias="not_in")
-    ISSUBSET: Optional[List[StrictInt]] = Field(None, alias="issubset")
-    ISSUPERSET: Optional[List[StrictInt]] = Field(None, alias="issuperset")
+    IS_SUBSET: Optional[List[StrictInt]] = Field(None, alias="is_subset")
+    IS_SUPERSET: Optional[List[StrictInt]] = Field(None, alias="is_superset")
+    INTERSECTS: Optional[List[StrictInt]] = Field(None, alias="intersects")
     EQ: Union[StrictInt, StrictFloat] = Field(None, alias="==")
     NEQ: Union[StrictInt, StrictFloat] = Field(None, alias="!=")
     GEQ: Union[StrictInt, StrictFloat] = Field(None, alias=">=")
@@ -354,7 +357,7 @@ class ConfigSchemaPretrain(BaseModel):
     batcher: Batcher = Field(..., title="Batcher for the training data")
     component: str = Field(..., title="Component to find the layer to pretrain")
     layer: str = Field(..., title="Layer to pretrain. Whole model if empty.")
-    objective: Callable[["Vocab", "Model"], "Model"] = Field(..., title="A function that creates the pretraining objective.")
+    objective: Callable[["Vocab", Model], Model] = Field(..., title="A function that creates the pretraining objective.")
     # fmt: on
 
     class Config:

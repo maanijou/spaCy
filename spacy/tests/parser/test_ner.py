@@ -304,7 +304,7 @@ def test_empty_ner():
 
 
 def test_ruler_before_ner():
-    """ Test that an NER works after an entity_ruler: the second can add annotations """
+    """Test that an NER works after an entity_ruler: the second can add annotations"""
     nlp = English()
 
     # 1 : Entity Ruler - should set "this" to B and everything else to empty
@@ -329,12 +329,12 @@ def test_ner_constructor(en_vocab):
     }
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    ner_1 = EntityRecognizer(en_vocab, model, **config)
-    ner_2 = EntityRecognizer(en_vocab, model)
+    EntityRecognizer(en_vocab, model, **config)
+    EntityRecognizer(en_vocab, model)
 
 
 def test_ner_before_ruler():
-    """ Test that an entity_ruler works after an NER: the second can overwrite O annotations """
+    """Test that an entity_ruler works after an NER: the second can overwrite O annotations"""
     nlp = English()
 
     # 1: untrained NER - should set everything to O
@@ -355,7 +355,7 @@ def test_ner_before_ruler():
 
 
 def test_block_ner():
-    """ Test functionality for blocking tokens so they can't be in a named entity """
+    """Test functionality for blocking tokens so they can't be in a named entity"""
     # block "Antti L Korhonen" from being a named entity
     nlp = English()
     nlp.add_pipe("blocker", config={"start": 2, "end": 5})
@@ -557,7 +557,11 @@ def test_neg_annotation(neg_key):
     ner.add_label("PERSON")
     ner.add_label("ORG")
     example = Example.from_dict(neg_doc, {"entities": [(7, 17, "PERSON")]})
-    example.reference.spans[neg_key] = [Span(neg_doc, 2, 4, "ORG"), Span(neg_doc, 2, 3, "PERSON"), Span(neg_doc, 1, 4, "PERSON")]
+    example.reference.spans[neg_key] = [
+        Span(neg_doc, 2, 4, "ORG"),
+        Span(neg_doc, 2, 3, "PERSON"),
+        Span(neg_doc, 1, 4, "PERSON"),
+    ]
 
     optimizer = nlp.initialize()
     for i in range(2):

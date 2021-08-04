@@ -39,7 +39,7 @@ how the component should be configured. You can override its settings via the
 | `phrase_matcher_attr` | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. Defaults to `None`. ~~Optional[Union[int, str]]~~ |
 | `validate`            | Whether patterns should be validated (passed to the `Matcher` and `PhraseMatcher`). Defaults to `False`. ~~bool~~                                                                             |
 | `overwrite_ents`      | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                     |
-| `ent_id_sep`          | Separator used internally for entity IDs. Defaults to `"||"`. ~~str~~                                                                                                                         |
+| `ent_id_sep`          | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                       |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entityruler.py
@@ -71,7 +71,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | `phrase_matcher_attr`             | Optional attribute name match on for the internal [`PhraseMatcher`](/api/phrasematcher), e.g. `LOWER` to match on the lowercase token text. Defaults to `None`. ~~Optional[Union[int, str]]~~                                         |
 | `validate`                        | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`. ~~bool~~                                                                                                                |
 | `overwrite_ents`                  | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                                                             |
-| `ent_id_sep`                      | Separator used internally for entity IDs. Defaults to `"||"`. ~~str~~                                                                                                                                                                 |
+| `ent_id_sep`                      | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                                                               |
 | `patterns`                        | Optional patterns to load in on initialization. ~~Optional[List[Dict[str, Union[str, List[dict]]]]]~~                                                                                                                                 |
 
 ## EntityRuler.initialize {#initialize tag="method" new="3"}

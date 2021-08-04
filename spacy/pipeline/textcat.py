@@ -299,7 +299,9 @@ class TextCategorizer(TrainablePipe):
         self._allow_extra_label()
         self.cfg["labels"].append(label)
         if self.model and "resize_output" in self.model.attrs:
-            self.model = self.model.attrs["resize_output"](self.model, len(self.cfg["labels"]))
+            self.model = self.model.attrs["resize_output"](
+                self.model, len(self.cfg["labels"])
+            )
         self.vocab.strings.add(label)
         return 1
 
@@ -334,6 +336,8 @@ class TextCategorizer(TrainablePipe):
         else:
             for label in labels:
                 self.add_label(label)
+        if len(self.labels) < 2:
+            raise ValueError(Errors.E867)
         if positive_label is not None:
             if positive_label not in self.labels:
                 err = Errors.E920.format(pos_label=positive_label, labels=self.labels)

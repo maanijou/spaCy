@@ -8,7 +8,7 @@ from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error, logger
+from spacy.util import registry, ignore_error, raise_error
 import spacy
 from thinc.api import NumpyOps, get_current_ops
 
@@ -143,7 +143,9 @@ def sample_vectors():
 
 @pytest.fixture
 def nlp2(nlp, sample_vectors):
-    Language.component("test_language_vector_modification_pipe", func=vector_modification_pipe)
+    Language.component(
+        "test_language_vector_modification_pipe", func=vector_modification_pipe
+    )
     Language.component("test_language_userdata_pipe", func=userdata_pipe)
     Language.component("test_language_ner_pipe", func=ner_pipe)
     add_vecs_to_vocab(nlp.vocab, sample_vectors)
@@ -417,6 +419,37 @@ def test_language_from_config_before_after_init_invalid():
         config = {"nlp": {"after_pipeline_creation": {"@callbacks": callback_name}}}
         with pytest.raises(ValueError):
             English.from_config(config)
+
+
+def test_language_whitespace_tokenizer():
+    """Test the custom whitespace tokenizer from the docs."""
+
+    class WhitespaceTokenizer:
+        def __init__(self, vocab):
+            self.vocab = vocab
+
+        def __call__(self, text):
+            words = text.split(" ")
+            spaces = [True] * len(words)
+            # Avoid zero-length tokens
+            for i, word in enumerate(words):
+                if word == "":
+                    words[i] = " "
+                    spaces[i] = False
+            # Remove the final trailing space
+            if words[-1] == " ":
+                words = words[0:-1]
+                spaces = spaces[0:-1]
+            else:
+                spaces[-1] = False
+
+            return Doc(self.vocab, words=words, spaces=spaces)
+
+    nlp = spacy.blank("en")
+    nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
+    text = "   What's happened to    me? he thought. It wasn't a dream.    "
+    doc = nlp(text)
+    assert doc.text == text
 
 
 def test_language_custom_tokenizer():
