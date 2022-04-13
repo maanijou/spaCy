@@ -247,11 +247,54 @@ config can be used to configure the split mode to `A`, `B` or `C`.
 split_mode = "A"
 ```
 
+Extra information, such as reading, inflection form, and the SudachiPy
+normalized form, is available in `Token.morph`. For `B` or `C` split modes,
+subtokens are stored in `Doc.user_data["sub_tokens"]`.
+
 <Infobox variant="warning">
 
 If you run into errors related to `sudachipy`, which is currently under active
 development, we suggest downgrading to `sudachipy==0.4.9`, which is the version
 used for training the current [Japanese pipelines](/models/ja).
+
+</Infobox>
+
+### Korean language support {#korean}
+
+> #### mecab-ko tokenizer
+>
+> ```python
+> nlp = spacy.blank("ko")
+> ```
+
+The default MeCab-based Korean tokenizer requires:
+
+- [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md)
+- [mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic)
+- [natto-py](https://github.com/buruzaemon/natto-py)
+
+For some Korean datasets and tasks, the
+[rule-based tokenizer](/usage/linguistic-features#tokenization) is better-suited
+than MeCab. To configure a Korean pipeline with the rule-based tokenizer:
+
+> #### Rule-based tokenizer
+>
+> ```python
+> config = {"nlp": {"tokenizer": {"@tokenizers": "spacy.Tokenizer.v1"}}}
+> nlp = spacy.blank("ko", config=config)
+> ```
+
+```ini
+### config.cfg
+[nlp]
+lang = "ko"
+tokenizer = {"@tokenizers" = "spacy.Tokenizer.v1"}
+```
+
+<Infobox>
+
+The [Korean trained pipelines](/models/ko) use the rule-based tokenizer, so no
+additional dependencies are required.
 
 </Infobox>
 
@@ -413,10 +456,10 @@ doc = nlp("This is a sentence.")
 <Infobox title="Tip: Preview model info" emoji="💡">
 
 You can use the [`info`](/api/cli#info) command or
-[`spacy.info()`](/api/top-level#spacy.info) method to print a pipeline
-package's meta data before loading it. Each `Language` object with a loaded
-pipeline also exposes the pipeline's meta data as the attribute `meta`. For
-example, `nlp.meta['version']` will return the package version.
+[`spacy.info()`](/api/top-level#spacy.info) method to print a pipeline package's
+meta data before loading it. Each `Language` object with a loaded pipeline also
+exposes the pipeline's meta data as the attribute `meta`. For example,
+`nlp.meta['version']` will return the package version.
 
 </Infobox>
 

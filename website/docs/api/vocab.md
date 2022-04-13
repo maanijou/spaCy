@@ -21,15 +21,15 @@ Create the vocabulary.
 > vocab = Vocab(strings=["hello", "world"])
 > ```
 
-| Name                                        | Description                                                                                                                                            |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `lex_attr_getters`                          | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`. ~~Optional[Dict[str, Callable[[str], Any]]]~~                     |
-| `strings`                                   | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings. ~~Union[List[str], StringStore]~~          |
-| `lookups`                                   | A [`Lookups`](/api/lookups) that stores the `lexeme_norm` and other large lookup tables. Defaults to `None`. ~~Optional[Lookups]~~                     |
-| `oov_prob`                                  | The default OOV probability. Defaults to `-20.0`. ~~float~~                                                                                            |
-| `vectors_name` <Tag variant="new">2.2</Tag> | A name to identify the vectors table. ~~str~~                                                                                                          |
-| `writing_system`                            | A dictionary describing the language's writing system. Typically provided by [`Language.Defaults`](/api/language#defaults). ~~Dict[str, Any]~~         |
-| `get_noun_chunks`                           | A function that yields base noun phrases used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]~~ |
+| Name                                        | Description                                                                                                                                                             |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lex_attr_getters`                          | A dictionary mapping attribute IDs to functions to compute them. Defaults to `None`. ~~Optional[Dict[str, Callable[[str], Any]]]~~                                      |
+| `strings`                                   | A [`StringStore`](/api/stringstore) that maps strings to hash values, and vice versa, or a list of strings. ~~Union[List[str], StringStore]~~                           |
+| `lookups`                                   | A [`Lookups`](/api/lookups) that stores the `lexeme_norm` and other large lookup tables. Defaults to `None`. ~~Optional[Lookups]~~                                      |
+| `oov_prob`                                  | The default OOV probability. Defaults to `-20.0`. ~~float~~                                                                                                             |
+| `vectors_name` <Tag variant="new">2.2</Tag> | A name to identify the vectors table. ~~str~~                                                                                                                           |
+| `writing_system`                            | A dictionary describing the language's writing system. Typically provided by [`Language.Defaults`](/api/language#defaults). ~~Dict[str, Any]~~                          |
+| `get_noun_chunks`                           | A function that yields base noun phrases used for [`Doc.noun_chunks`](/api/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]~~ |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 
@@ -156,7 +156,7 @@ cosines are calculated in minibatches to reduce memory usage.
 >
 > ```python
 > nlp.vocab.prune_vectors(10000)
-> assert len(nlp.vocab.vectors) <= 1000
+> assert len(nlp.vocab.vectors) <= 10000
 > ```
 
 | Name         | Description                                                                                                                                                                                                                  |
@@ -165,26 +165,34 @@ cosines are calculated in minibatches to reduce memory usage.
 | `batch_size` | Batch of vectors for calculating the similarities. Larger batch sizes might be faster, while temporarily requiring more memory. ~~int~~                                                                                      |
 | **RETURNS**  | A dictionary keyed by removed words mapped to `(string, score)` tuples, where `string` is the entry the removed word was mapped to, and `score` the similarity score between the two words. ~~Dict[str, Tuple[str, float]]~~ |
 
+## Vocab.deduplicate_vectors {#deduplicate_vectors tag="method" new="3.3"}
+
+> #### Example
+>
+> ```python
+> nlp.vocab.deduplicate_vectors()
+> ```
+
+Remove any duplicate rows from the current vector table, maintaining the
+mappings for all words in the vectors.
+
 ## Vocab.get_vector {#get_vector tag="method" new="2"}
 
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
-or hash value. If no vectors data is loaded, a `ValueError` is raised. If `minn`
-is defined, then the resulting vector uses [FastText](https://fasttext.cc/)'s
-subword features by average over n-grams of `orth` (introduced in spaCy `v2.1`).
+or hash value. If the current vectors do not contain an entry for the word, a
+0-vector with the same number of dimensions
+([`Vocab.vectors_length`](#attributes)) as the current vectors is returned.
 
 > #### Example
 >
 > ```python
 > nlp.vocab.get_vector("apple")
-> nlp.vocab.get_vector("apple", minn=1, maxn=5)
 > ```
 
-| Name                                | Description                                                                                                            |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `orth`                              | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
-| `minn` <Tag variant="new">2.1</Tag> | Minimum n-gram length used for FastText's n-gram computation. Defaults to the length of `orth`. ~~int~~                |
-| `maxn` <Tag variant="new">2.1</Tag> | Maximum n-gram length used for FastText's n-gram computation. Defaults to the length of `orth`. ~~int~~                |
-| **RETURNS**                         | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
+| Name        | Description                                                                                                            |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `orth`      | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
+| **RETURNS** | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Vocab.set_vector {#set_vector tag="method" new="2"}
 
@@ -300,14 +308,14 @@ Load state from a binary string.
 > assert type(PERSON) == int
 > ```
 
-| Name                                           | Description                                                                                                                                            |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `strings`                                      | A table managing the string-to-int mapping. ~~StringStore~~                                                                                            |
-| `vectors` <Tag variant="new">2</Tag>           | A table associating word IDs to word vectors. ~~Vectors~~                                                                                              |
-| `vectors_length`                               | Number of dimensions for each word vector. ~~int~~                                                                                                     |
-| `lookups`                                      | The available lookup tables in this vocab. ~~Lookups~~                                                                                                 |
-| `writing_system` <Tag variant="new">2.1</Tag>  | A dict with information about the language's writing system. ~~Dict[str, Any]~~                                                                        |
-| `get_noun_chunks` <Tag variant="new">3.0</Tag> | A function that yields base noun phrases used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]~~ |
+| Name                                           | Description                                                                                                                                                            |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `strings`                                      | A table managing the string-to-int mapping. ~~StringStore~~                                                                                                            |
+| `vectors` <Tag variant="new">2</Tag>           | A table associating word IDs to word vectors. ~~Vectors~~                                                                                                              |
+| `vectors_length`                               | Number of dimensions for each word vector. ~~int~~                                                                                                                     |
+| `lookups`                                      | The available lookup tables in this vocab. ~~Lookups~~                                                                                                                 |
+| `writing_system` <Tag variant="new">2.1</Tag>  | A dict with information about the language's writing system. ~~Dict[str, Any]~~                                                                                        |
+| `get_noun_chunks` <Tag variant="new">3.0</Tag> | A function that yields base noun phrases used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]~~ |
 
 ## Serialization fields {#serialization-fields}
 
@@ -325,6 +333,5 @@ serialization by passing in the string names via the `exclude` argument.
 | Name      | Description                                           |
 | --------- | ----------------------------------------------------- |
 | `strings` | The strings in the [`StringStore`](/api/stringstore). |
-| `lexemes` | The lexeme data.                                      |
 | `vectors` | The word vectors, if available.                       |
 | `lookups` | The lookup tables, if available.                      |

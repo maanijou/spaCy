@@ -1,18 +1,13 @@
 import warnings
 
 
-def add_codes(err_cls):
-    """Add error codes to string messages via class attribute names."""
-
-    class ErrorsWithCodes(err_cls):
-        def __getattribute__(self, code):
-            msg = super(ErrorsWithCodes, self).__getattribute__(code)
-            if code.startswith("__"):  # python system attributes like __class__
-                return msg
-            else:
-                return "[{code}] {msg}".format(code=code, msg=msg)
-
-    return ErrorsWithCodes()
+class ErrorsWithCodes(type):
+    def __getattribute__(self, code):
+        msg = super().__getattribute__(code)
+        if code.startswith("__"):  # python system attributes like __class__
+            return msg
+        else:
+            return "[{code}] {msg}".format(code=code, msg=msg)
 
 
 def setup_default_warnings():
@@ -25,7 +20,10 @@ def setup_default_warnings():
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
     # warn once about lemmatizer without required POS
-    filter_warning("once", error_msg="[W108]")
+    filter_warning("once", error_msg=Warnings.W108)
+
+    # floret vector table cannot be modified
+    filter_warning("once", error_msg="[W114]")
 
 
 def filter_warning(action: str, error_msg: str):
@@ -44,8 +42,7 @@ def _escape_warning_msg(msg):
 
 # fmt: off
 
-@add_codes
-class Warnings:
+class Warnings(metaclass=ErrorsWithCodes):
     W005 = ("Doc object not parsed. This means displaCy won't be able to "
             "generate a dependency visualization for it. Make sure the Doc "
             "was processed with a model that supports dependency parsing, and "
@@ -116,13 +113,11 @@ class Warnings:
 
     # New warnings added in v3.x
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
-            "'{name}' which is frozen. You can either freeze both, or neither "
-            "of the two. If you're sourcing the component from "
-            "an existing pipeline, you can use the `replace_listeners` setting in "
-            "the config block to replace its token-to-vector listener with a copy "
-            "and make it independent. For example, `replace_listeners = "
-            "[\"model.tok2vec\"]` See the documentation for details: "
-            "https://spacy.io/usage/training#config-components-listeners")
+            "'{name}' which is frozen. If you want to prevent retraining '{name}' "
+            "but want to train '{listener}' on top of it, you should add '{name}' to the "
+            "list of 'annotating_components' in the 'training' block in the config. "
+            "See the documentation for details: "
+            "https://spacy.io/usage/training#annotating-components")
     W087 = ("Component '{name}' will be (re)trained, but the component '{listener}' "
             "depends on it via a listener and is frozen. This means that the "
             "performance of '{listener}' will be degraded. You can either freeze "
@@ -172,8 +167,8 @@ class Warnings:
             "call the {matcher} on each Doc object.")
     W107 = ("The property `Doc.{prop}` is deprecated. Use "
             "`Doc.has_annotation(\"{attr}\")` instead.")
-    W108 = ("The rule-based lemmatizer did not find POS annotation for the "
-            "token '{text}'. Check that your pipeline includes components that "
+    W108 = ("The rule-based lemmatizer did not find POS annotation for one or "
+            "more tokens. Check that your pipeline includes components that "
             "assign token.pos, typically 'tagger'+'attribute_ruler' or "
             "'morphologizer'.")
     W109 = ("Unable to save user hooks while serializing the doc. Re-add any "
@@ -192,10 +187,21 @@ class Warnings:
             "vectors. This is almost certainly a mistake.")
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
+    W114 = ("Using multiprocessing with GPU models is not recommended and may "
+            "lead to errors.")
+    W115 = ("Skipping {method}: the floret vector table cannot be modified. "
+            "Vectors are calculated from character ngrams.")
+    W116 = ("Unable to clean attribute '{attr}'.")
+    W117 = ("No spans to visualize found in Doc object with spans_key: '{spans_key}'. If this is "
+            "surprising to you, make sure the Doc was processed using a model "
+            "that supports span categorization, and check the `doc.spans[spans_key]` "
+            "property manually if necessary.")
+    W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
+            "for the corpora used to train the language. Please check "
+            "`nlp.meta[\"sources\"]` for any relevant links.")
 
 
-@add_codes
-class Errors:
+class Errors(metaclass=ErrorsWithCodes):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
             "This usually happens when spaCy calls `nlp.{method}` with a custom "
@@ -284,7 +290,7 @@ class Errors:
             "you forget to call the `set_extension` method?")
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
-    E048 = ("Can't import language {lang} from spacy.lang: {err}")
+    E048 = ("Can't import language {lang} or any matching language from spacy.lang: {err}")
     E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
             "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")
@@ -484,7 +490,7 @@ class Errors:
             "components, since spans are only views of the Doc. Use Doc and "
             "Token attributes (or custom extension attributes) only and remove "
             "the following: {attrs}")
-    E181 = ("Received invalid attributes for unkown object {obj}: {attrs}. "
+    E181 = ("Received invalid attributes for unknown object {obj}: {attrs}. "
             "Only Doc and Token attributes are supported.")
     E182 = ("Received invalid attribute declaration: {attr}\nDid you forget "
             "to define the attribute? For example: `{attr}.???`")
@@ -518,9 +524,28 @@ class Errors:
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
     E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
-    E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
+    E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E855 = ("Invalid {obj}: {obj} is not from the same doc.")
+    E856 = ("Error accessing span at position {i}: out of bounds in span group "
+            "of length {length}.")
+    E857 = ("Entry '{name}' not found in edit tree lemmatizer labels.")
+    E858 = ("The {mode} vector table does not support this operation. "
+            "{alternative}")
+    E859 = ("The floret vector table cannot be modified.")
+    E860 = ("Can't truncate floret vectors.")
+    E861 = ("No 'keys' should be provided when initializing floret vectors "
+            "with 'minn' and 'maxn'.")
+    E862 = ("'hash_count' must be between 1-4 for floret vectors.")
+    E863 = ("'maxn' must be greater than or equal to 'minn'.")
+    E864 = ("The complete vector table 'data' is required to initialize floret "
+            "vectors.")
+    E865 = ("A SpanGroup is not functional after the corresponding Doc has "
+            "been garbage collected. To keep using the spans, make sure that "
+            "the corresponding Doc object is still available in the scope of "
+            "your function.")
+    E866 = ("Expected a string or 'Doc' as input, but got: {type}.")
     E867 = ("The 'textcat' component requires at least two labels because it "
             "uses mutually exclusive classes where exactly one label is True "
             "for each doc. For binary classification tasks, you can use two "
@@ -552,9 +577,6 @@ class Errors:
     E879 = ("Unexpected type for 'spans' data. Provide a dictionary mapping keys to "
             "a list of spans, with each span represented by a tuple (start_char, end_char). "
             "The tuple can be optionally extended with a label and a KB ID.")
-    E880 = ("The 'wandb' library could not be found - did you install it? "
-            "Alternatively, specify the 'ConsoleLogger' in the 'training.logger' "
-            "config section, instead of the 'WandbLogger'.")
     E884 = ("The pipeline could not be initialized because the vectors "
             "could not be found at '{vectors}'. If your pipeline was already "
             "initialized/trained before, call 'resume_training' instead of 'initialize', "
@@ -628,7 +650,7 @@ class Errors:
     E912 = ("Failed to initialize lemmatizer. Missing lemmatizer table(s) found "
             "for mode '{mode}'. Required tables: {tables}. Found: {found}.")
     E913 = ("Corpus path can't be None. Maybe you forgot to define it in your "
-            "config.cfg or override it on the CLI?")
+            ".cfg file or override it on the CLI?")
     E914 = ("Executing {name} callback failed. Expected the function to "
             "return the nlp object but got: {value}. Maybe you forgot to return "
             "the modified object in your function?")
@@ -655,7 +677,9 @@ class Errors:
             "{nO} - cannot add any more labels.")
     E923 = ("It looks like there is no proper sample data to initialize the "
             "Model of component '{name}'. To check your input data paths and "
-            "annotation, run: python -m spacy debug data config.cfg")
+            "annotation, run: python -m spacy debug data config.cfg "
+            "and include the same config override values you would specify "
+            "for the 'spacy train' command.")
     E924 = ("The '{name}' component does not seem to be initialized properly. "
             "This is likely a bug in spaCy, so feel free to open an issue: "
             "https://github.com/explosion/spaCy/issues")
@@ -790,7 +814,7 @@ class Errors:
             "to token boundaries.")
     E982 = ("The `Token.ent_iob` attribute should be an integer indexing "
             "into {values}, but found {value}.")
-    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
+    E983 = ("Invalid key(s) for '{dict}': {key}. Available keys: "
             "{keys}")
     E984 = ("Invalid component config for '{name}': component block needs either "
             "a key `factory` specifying the registered function used to "
@@ -867,7 +891,21 @@ class Errors:
     E1019 = ("`noun_chunks` requires the pos tagging, which requires a "
              "statistical model to be installed and loaded. For more info, see "
              "the documentation:\nhttps://spacy.io/usage/models")
-
+    E1020 = ("No `epoch_resume` value specified and could not infer one from "
+             "filename. Specify an epoch to resume from.")
+    E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
+             "Non-UD tags should use the `tag` property.")
+    E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
+    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
+             "exist.")
+    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler "
+             "patterns.")
+    E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
+             "supported values are: 'I', 'O', 'B' and ''")
+    E1026 = ("Edit tree has an invalid format:\n{errors}")
+    E1027 = ("AlignmentArray only supports slicing with a step of 1.")
+    E1028 = ("AlignmentArray only supports indexing using an int or a slice.")
+    
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
