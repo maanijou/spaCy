@@ -318,17 +318,15 @@ def test_vectors_lexeme_doc_similarity(vocab, text):
 @pytest.mark.parametrize("text", [["apple", "orange", "juice"]])
 def test_vectors_span_span_similarity(vocab, text):
     doc = Doc(vocab, words=text)
-    with pytest.warns(UserWarning):
-        assert doc[0:2].similarity(doc[1:3]) == doc[1:3].similarity(doc[0:2])
-        assert -1.0 < doc[0:2].similarity(doc[1:3]) < 1.0
+    assert doc[0:2].similarity(doc[1:3]) == doc[1:3].similarity(doc[0:2])
+    assert -1.0 < doc[0:2].similarity(doc[1:3]) < 1.0
 
 
 @pytest.mark.parametrize("text", [["apple", "orange", "juice"]])
 def test_vectors_span_doc_similarity(vocab, text):
     doc = Doc(vocab, words=text)
-    with pytest.warns(UserWarning):
-        assert doc[0:2].similarity(doc) == doc.similarity(doc[0:2])
-        assert -1.0 < doc[0:2].similarity(doc) < 1.0
+    assert doc[0:2].similarity(doc) == doc.similarity(doc[0:2])
+    assert -1.0 < doc[0:2].similarity(doc) < 1.0
 
 
 @pytest.mark.parametrize(
@@ -628,3 +626,23 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
             OPS.to_numpy(vocab_r[word].vector),
             decimal=6,
         )
+
+
+def test_equality():
+    vectors1 = Vectors(shape=(10, 10))
+    vectors2 = Vectors(shape=(10, 8))
+
+    assert vectors1 != vectors2
+
+    vectors2 = Vectors(shape=(10, 10))
+    assert vectors1 == vectors2
+
+    vectors1.add("hello", row=2)
+    assert vectors1 != vectors2
+
+    vectors2.add("hello", row=2)
+    assert vectors1 == vectors2
+
+    vectors1.resize((5, 9))
+    vectors2.resize((5, 9))
+    assert vectors1 == vectors2

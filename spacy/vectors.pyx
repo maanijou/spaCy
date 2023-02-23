@@ -243,6 +243,15 @@ cdef class Vectors:
         else:
             return key in self.key2row
 
+    def __eq__(self, other):
+        # Check for equality, with faster checks first
+        return (
+                self.shape == other.shape
+                and self.key2row == other.key2row
+                and self.to_bytes(exclude=["strings"])
+                  == other.to_bytes(exclude=["strings"])
+               )
+
     def resize(self, shape, inplace=False):
         """Resize the underlying vectors array. If inplace=True, the memory
         is reallocated. This may cause other references to the data to become
@@ -336,10 +345,10 @@ cdef class Vectors:
         xp = get_array_module(self.data)
         if key is not None:
             key = get_string_id(key)
-            return self.key2row.get(key, -1)
+            return self.key2row.get(int(key), -1)
         elif keys is not None:
             keys = [get_string_id(key) for key in keys]
-            rows = [self.key2row.get(key, -1.) for key in keys]
+            rows = [self.key2row.get(int(key), -1) for key in keys]
             return xp.asarray(rows, dtype="i")
         else:
             row2key = {row: key for key, row in self.key2row.items()}

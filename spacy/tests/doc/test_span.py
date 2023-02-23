@@ -163,6 +163,18 @@ def test_char_span(doc, i_sent, i, j, text):
         assert span.text == text
 
 
+def test_char_span_attributes(doc):
+    label = "LABEL"
+    kb_id = "KB_ID"
+    span_id = "SPAN_ID"
+    span1 = doc.char_span(20, 45, label=label, kb_id=kb_id, span_id=span_id)
+    span2 = doc[1:].char_span(15, 40, label=label, kb_id=kb_id, span_id=span_id)
+    assert span1.text == span2.text
+    assert span1.label_ == span2.label_ == label
+    assert span1.kb_id_ == span2.kb_id_ == kb_id
+    assert span1.id_ == span2.id_ == span_id
+
+
 def test_spans_sent_spans(doc):
     sents = list(doc.sents)
     assert sents[0].start == 0
@@ -367,6 +379,14 @@ def test_spans_by_character(doc):
             span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="unk"
         )
 
+    # Span.char_span + alignment mode "contract"
+    span2 = doc[0:2].char_span(
+        span1.start_char - 3, span1.end_char, label="GPE", alignment_mode="contract"
+    )
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == "GPE"
+
 
 def test_span_to_array(doc):
     span = doc[1:-2]
@@ -428,10 +448,19 @@ def test_span_string_label_kb_id(doc):
     assert span.kb_id == doc.vocab.strings["Q342"]
 
 
+def test_span_string_label_id(doc):
+    span = Span(doc, 0, 1, label="hello", span_id="Q342")
+    assert span.label_ == "hello"
+    assert span.label == doc.vocab.strings["hello"]
+    assert span.id_ == "Q342"
+    assert span.id == doc.vocab.strings["Q342"]
+
+
 def test_span_attrs_writable(doc):
     span = Span(doc, 0, 1)
     span.label_ = "label"
     span.kb_id_ = "kb_id"
+    span.id_ = "id"
 
 
 def test_span_ents_property(doc):
@@ -619,6 +648,9 @@ def test_span_comparison(doc):
     assert Span(doc, 0, 4, "LABEL", kb_id="KB_ID") <= Span(doc, 1, 3)
     assert Span(doc, 1, 3) > Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
     assert Span(doc, 1, 3) >= Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
+
+    # Different id
+    assert Span(doc, 1, 3, span_id="AAA") < Span(doc, 1, 3, span_id="BBB")
 # fmt: on
 
 

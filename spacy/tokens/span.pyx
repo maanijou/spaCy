@@ -80,17 +80,20 @@ cdef class Span:
         return Underscore.span_extensions.pop(name)
 
     def __cinit__(self, Doc doc, int start, int end, label=0, vector=None,
-                  vector_norm=None, kb_id=0):
+                  vector_norm=None, kb_id=0, span_id=0):
         """Create a `Span` object from the slice `doc[start : end]`.
 
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
-        label (int or str): A label to attach to the Span, e.g. for named entities.
+        label (Union[int, str]): A label to attach to the Span, e.g. for named
+            entities.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
         vector_norm (float): The L2 norm of the span's vector representation.
-        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
+        kb_id (Union[int, str]): An identifier from a Knowledge Base to capture
+            the meaning of a named entity.
+        span_id (Union[int, str]): An identifier to associate with the span.
 
         DOCS: https://spacy.io/api/span#init
         """
@@ -101,6 +104,8 @@ cdef class Span:
             label = doc.vocab.strings.add(label)
         if isinstance(kb_id, str):
             kb_id = doc.vocab.strings.add(kb_id)
+        if isinstance(span_id, str):
+            span_id = doc.vocab.strings.add(span_id)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
 
@@ -112,6 +117,7 @@ cdef class Span:
         self.c = SpanC(
             label=label,
             kb_id=kb_id,
+            id=span_id,
             start=start,
             end=end,
             start_char=start_char,
@@ -126,8 +132,8 @@ cdef class Span:
                 return False
             else:
                 return True
-        self_tuple = (self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.doc)
-        other_tuple = (other.c.start_char, other.c.end_char, other.c.label, other.c.kb_id, other.doc)
+        self_tuple = (self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.id, self.doc)
+        other_tuple = (other.c.start_char, other.c.end_char, other.c.label, other.c.kb_id, other.id, other.doc)
         # <
         if op == 0:
             return self_tuple < other_tuple
@@ -148,7 +154,7 @@ cdef class Span:
             return self_tuple >= other_tuple
 
     def __hash__(self):
-        return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id))
+        return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.c.id))
 
     def __len__(self):
         """Get the number of tokens in the span.
@@ -293,7 +299,7 @@ cdef class Span:
                     for ancestor in ancestors:
                         ancestor_i = ancestor.i - self.c.start
                         if ancestor_i in range(length):
-                            array[i, head_col] = ancestor_i - i
+                            array[i, head_col] = numpy.int32(ancestor_i - i).astype(numpy.uint64)
 
                 # if there is no appropriate ancestor, define a new artificial root
                 value = array[i, head_col]
@@ -301,7 +307,7 @@ cdef class Span:
                     new_root = old_to_new_root.get(ancestor_i, None)
                     if new_root is not None:
                         # take the same artificial root as a previous token from the same sentence
-                        array[i, head_col] = new_root - i
+                        array[i, head_col] = numpy.int32(new_root - i).astype(numpy.uint64)
                     else:
                         # set this token as the new artificial root
                         array[i, head_col] = 0
@@ -348,14 +354,15 @@ cdef class Span:
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Span"))
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
-            warnings.warn(Warnings.W008.format(obj="Span"))
+            if not self.has_vector or not other.has_vector:
+                warnings.warn(Warnings.W008.format(obj="Span"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
         result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
         # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
         return result.item()
-    
+
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy
         `ndarray` of shape `(N, M)`, where `N` is the length of the document.
@@ -632,21 +639,28 @@ cdef class Span:
         else:
             return self.doc[root]
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, id=0, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice `span.text[start : end]`.
 
         start (int): The index of the first character of the span.
         end (int): The index of the first character after the span.
-        label (uint64 or string): A label to attach to the Span, e.g. for
+        label (Union[int, str]): A label to attach to the Span, e.g. for
             named entities.
-        kb_id (uint64 or string):  An ID from a KB to capture the meaning of a named entity.
+        kb_id (Union[int, str]):  An ID from a KB to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of
             the span.
+        id (Union[int, str]): Unused.
+        alignment_mode (str): How character indices are aligned to token
+            boundaries. Options: "strict" (character indices must be aligned
+            with token boundaries), "contract" (span of all tokens completely
+            within the character span), "expand" (span of all tokens at least
+            partially covered by the character span). Defaults to "strict".
+        span_id (Union[int, str]): An identifier to associate with the span.
         RETURNS (Span): The newly constructed object.
         """
         start_idx += self.c.start_char
         end_idx += self.c.start_char
-        return self.doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector)
+        return self.doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector, alignment_mode=alignment_mode, span_id=span_id)
 
     @property
     def conjuncts(self):
@@ -730,7 +744,7 @@ cdef class Span:
 
         def __set__(self, int start):
             if start < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="start", forbidden="< 0", value=start))
             self.c.start = start
 
     property end:
@@ -739,7 +753,7 @@ cdef class Span:
 
         def __set__(self, int end):
             if end < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="end", forbidden="< 0", value=end))
             self.c.end = end
 
     property start_char:
@@ -748,7 +762,7 @@ cdef class Span:
 
         def __set__(self, int start_char):
             if start_char < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="start_char", forbidden="< 0", value=start_char))
             self.c.start_char = start_char
 
     property end_char:
@@ -757,7 +771,7 @@ cdef class Span:
 
         def __set__(self, int end_char):
             if end_char < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="end_char", forbidden="< 0", value=end_char))
             self.c.end_char = end_char
 
     property label:
@@ -773,6 +787,13 @@ cdef class Span:
 
         def __set__(self, attr_t kb_id):
             self.c.kb_id = kb_id
+
+    property id:
+        def __get__(self):
+            return self.c.id
+
+        def __set__(self, attr_t id):
+            self.c.id = id
 
     property ent_id:
         """RETURNS (uint64): The entity ID."""
@@ -812,12 +833,20 @@ cdef class Span:
             self.label = self.doc.vocab.strings.add(label_)
 
     property kb_id_:
-        """RETURNS (str): The named entity's KB ID."""
+        """RETURNS (str): The span's KB ID."""
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
 
         def __set__(self, str kb_id_):
             self.kb_id = self.doc.vocab.strings.add(kb_id_)
+
+    property id_:
+        """RETURNS (str): The span's ID."""
+        def __get__(self):
+            return self.doc.vocab.strings[self.id]
+
+        def __set__(self, str id_):
+            self.id = self.doc.vocab.strings.add(id_)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:

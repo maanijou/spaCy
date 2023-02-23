@@ -8,26 +8,6 @@ from spacy.lang.fa import Persian
 from spacy.tokens import Span, Doc
 
 
-@pytest.mark.issue(5447)
-def test_issue5447():
-    """Test that overlapping arcs get separate levels."""
-    renderer = DependencyRenderer()
-    words = [
-        {"text": "This", "tag": "DT"},
-        {"text": "is", "tag": "VBZ"},
-        {"text": "a", "tag": "DT"},
-        {"text": "sentence.", "tag": "NN"},
-    ]
-    arcs = [
-        {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
-        {"start": 2, "end": 3, "label": "det", "dir": "left"},
-        {"start": 2, "end": 3, "label": "overlap", "dir": "left"},
-        {"start": 1, "end": 3, "label": "attr", "dir": "left"},
-    ]
-    html = renderer.render([{"words": words, "arcs": arcs}])
-    assert renderer.highest_level == 3
-
-
 @pytest.mark.issue(2361)
 def test_issue2361(de_vocab):
     """Test if < is escaped when rendering"""
@@ -101,6 +81,27 @@ def test_issue3882(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "world"], deps=["dep", "dep"])
     doc.user_data["test"] = set()
     displacy.parse_deps(doc)
+
+
+@pytest.mark.issue(5447)
+def test_issue5447():
+    """Test that overlapping arcs get separate levels, unless they're identical."""
+    renderer = DependencyRenderer()
+    words = [
+        {"text": "This", "tag": "DT"},
+        {"text": "is", "tag": "VBZ"},
+        {"text": "a", "tag": "DT"},
+        {"text": "sentence.", "tag": "NN"},
+    ]
+    arcs = [
+        {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
+        {"start": 2, "end": 3, "label": "det", "dir": "left"},
+        {"start": 2, "end": 3, "label": "overlap", "dir": "left"},
+        {"end": 3, "label": "overlap", "start": 2, "dir": "left"},
+        {"start": 1, "end": 3, "label": "attr", "dir": "left"},
+    ]
+    renderer.render([{"words": words, "arcs": arcs}])
+    assert renderer.highest_level == 3
 
 
 @pytest.mark.issue(5838)
@@ -200,6 +201,16 @@ def test_displacy_parse_spans_different_spans_key(en_vocab):
             "kb_url": "#",
         }
     ]
+
+
+def test_displacy_parse_empty_spans_key(en_vocab):
+    """Test that having an unset spans key doesn't raise an error"""
+    doc = Doc(en_vocab, words=["Welcome", "to", "the", "Bank", "of", "China"])
+    doc.spans["custom"] = [Span(doc, 3, 6, "BANK")]
+    with pytest.warns(UserWarning, match="W117"):
+        spans = displacy.parse_spans(doc)
+
+    assert isinstance(spans, dict)
 
 
 def test_displacy_parse_ents(en_vocab):
@@ -337,3 +348,18 @@ def test_displacy_options_case():
     assert "green" in result[1] and "bar" in result[1]
     assert "red" in result[2] and "FOO" in result[2]
     assert "green" in result[3] and "BAR" in result[3]
+
+
+@pytest.mark.issue(10672)
+def test_displacy_manual_sorted_entities():
+    doc = {
+        "text": "But Google is starting from behind.",
+        "ents": [
+            {"start": 14, "end": 22, "label": "SECOND"},
+            {"start": 4, "end": 10, "label": "FIRST"},
+        ],
+        "title": None,
+    }
+
+    html = displacy.render(doc, style="ent", manual=True)
+    assert html.find("FIRST") < html.find("SECOND")
